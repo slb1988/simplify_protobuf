@@ -128,11 +128,8 @@ void MessageGenerator::Generate(io::Printer* printer) {
     printer->Print(vars, "pb::IExtendableMessage<$class_name$>\n");
   }
   else {
-    printer->Print(vars, "pb::IMessage<$class_name$>\n");
+    printer->Print(vars, "pb::IMessage\n");
   }
-  printer->Print("#if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE\n");
-  printer->Print("    , pb::IBufferMessage\n");
-  printer->Print("#endif\n");
   printer->Print("{\n");
   printer->Indent();
 
@@ -171,39 +168,41 @@ void MessageGenerator::Generate(io::Printer* printer) {
       "public static pb::MessageParser<$class_name$> Parser { get { return _parser; } }\n\n");
 
   // Access the message descriptor via the relevant file descriptor or containing message descriptor.
-  if (!descriptor_->containing_type()) {
-    vars["descriptor_accessor"] = GetReflectionClassName(descriptor_->file())
-        + ".Descriptor.MessageTypes[" + StrCat(descriptor_->index()) + "]";
-  } else {
-    vars["descriptor_accessor"] = GetClassName(descriptor_->containing_type())
-        + ".Descriptor.NestedTypes[" + StrCat(descriptor_->index()) + "]";
-  }
+  //if (!descriptor_->containing_type()) {
+  //  vars["descriptor_accessor"] = GetReflectionClassName(descriptor_->file())
+  //      + ".Descriptor.MessageTypes[" + StrCat(descriptor_->index()) + "]";
+  //} else {
+  //  vars["descriptor_accessor"] = GetClassName(descriptor_->containing_type())
+  //      + ".Descriptor.NestedTypes[" + StrCat(descriptor_->index()) + "]";
+  //}
 
-  WriteGeneratedCodeAttributes(printer);
-  printer->Print(
-    vars,
-    "public static pbr::MessageDescriptor Descriptor {\n"
-    "  get { return $descriptor_accessor$; }\n"
-    "}\n"
-    "\n");
-  WriteGeneratedCodeAttributes(printer);
-  printer->Print(
-    vars,
-    "pbr::MessageDescriptor pb::IMessage.Descriptor {\n"
-    "  get { return Descriptor; }\n"
-    "}\n"
-    "\n");
+  //WriteGeneratedCodeAttributes(printer);
+  //printer->Print(
+  //  vars,
+  //  "public static pbr::MessageDescriptor Descriptor {\n"
+  //  "  get { return $descriptor_accessor$; }\n"
+  //  "}\n"
+  //  "\n");
+  //WriteGeneratedCodeAttributes(printer);
+  //printer->Print(
+  //  vars,
+  //  "pbr::MessageDescriptor pb::IMessage.Descriptor {\n"
+  //  "  get { return Descriptor; }\n"
+  //  "}\n"
+  //  "\n");
 
   // Parameterless constructor and partial OnConstruction method.
-  WriteGeneratedCodeAttributes(printer);
-  printer->Print(
-    vars,
-    "public $class_name$() {\n"
-    "  OnConstruction();\n"
-    "}\n\n"
-    "partial void OnConstruction();\n\n");
+  //WriteGeneratedCodeAttributes(printer);
+  //printer->Print(
+  //  vars,
+  //  "public $class_name$() {\n"
+  //  "  OnConstruction();\n"
+  //  "}\n\n"
+  //  "partial void OnConstruction();\n\n");
 
-  GenerateCloningCode(printer);
+  //GenerateCloningCode(printer);
+  //== add by Luckey
+  GenerateResetCode(printer);
   GenerateFreezingCode(printer);
 
   // Fields/properties
@@ -211,12 +210,14 @@ void MessageGenerator::Generate(io::Printer* printer) {
     const FieldDescriptor* fieldDescriptor = descriptor_->field(i);
 
     // Rats: we lose the debug comment here :(
-    printer->Print(
-      "/// <summary>Field number for the \"$field_name$\" field.</summary>\n"
-      "public const int $field_constant_name$ = $index$;\n",
-      "field_name", fieldDescriptor->name(),
-      "field_constant_name", GetFieldConstantName(fieldDescriptor),
-      "index", StrCat(fieldDescriptor->number()));
+	// 会生成对应枚举成员类型eIcelandJobStatus.Enum Status_enum
+	printer->Print(
+		"/// <summary>Field number for the \"$field_name$\" field.</summary>\n",
+		"field_name", fieldDescriptor->name());
+      //"public const int $field_constant_name$ = $index$;\n",
+      //"field_name", fieldDescriptor->name(),
+      //"field_constant_name", GetFieldConstantName(fieldDescriptor),
+      //"index", StrCat(fieldDescriptor->number()));
     std::unique_ptr<FieldGeneratorBase> generator(
         CreateFieldGeneratorInternal(fieldDescriptor));
     generator->GenerateMembers(printer);
@@ -265,7 +266,7 @@ void MessageGenerator::Generate(io::Printer* printer) {
   }
 
   // Standard methods
-  GenerateFrameworkMethods(printer);
+  //GenerateFrameworkMethods(printer);
   GenerateMessageSerializationMethods(printer);
   GenerateMergingMethods(printer);
 
@@ -426,12 +427,56 @@ void MessageGenerator::GenerateCloningCode(io::Printer* printer) {
   printer->Outdent();
   printer->Print("}\n\n");
 
-  WriteGeneratedCodeAttributes(printer);
-  printer->Print(
-    vars,
-    "public $class_name$ Clone() {\n"
-    "  return new $class_name$(this);\n"
-    "}\n\n");
+  //WriteGeneratedCodeAttributes(printer);
+  //printer->Print(
+  //  vars,
+  //  "public $class_name$ Clone() {\n"
+  //  "  return new $class_name$(this);\n"
+  //  "}\n\n");
+}
+
+void MessageGenerator::GenerateResetCode(io::Printer* printer) {
+	std::map<string, string> vars;
+	vars["class_name"] = class_name();
+	printer->Print(
+		vars,
+		"public void Reset() {\n");
+
+	printer->Indent();
+	// Clone non-oneof fields first (treating optional proto3 fields as non-oneof)
+	for (int i = 0; i < descriptor_->field_count(); i++) {
+		const FieldDescriptor* field = descriptor_->field(i);
+		if (field->real_containing_oneof()) {
+			continue;
+		}
+		std::unique_ptr<FieldGeneratorBase> generator(CreateFieldGeneratorInternal(field));
+		generator->GenerateResetCode(printer);
+	}
+	// Clone just the right field for each real oneof
+	for (int i = 0; i < descriptor_->real_oneof_decl_count(); ++i) {
+		const OneofDescriptor* oneof = descriptor_->oneof_decl(i);
+		vars["name"] = UnderscoresToCamelCase(oneof->name(), false);
+		vars["property_name"] = UnderscoresToCamelCase(oneof->name(), true);
+		printer->Print(vars, "switch (other.$property_name$Case) {\n");
+		printer->Indent();
+		for (int j = 0; j < oneof->field_count(); j++) {
+			const FieldDescriptor* field = oneof->field(j);
+			std::unique_ptr<FieldGeneratorBase> generator(CreateFieldGeneratorInternal(field));
+			vars["field_property_name"] = GetPropertyName(field);
+			printer->Print(
+				vars,
+				"case $property_name$OneofCase.$field_property_name$:\n");
+			printer->Indent();
+			generator->GenerateResetCode(printer);
+			printer->Print("break;\n");
+			printer->Outdent();
+		}
+		printer->Outdent();
+		printer->Print("}\n\n");
+	}
+	printer->Outdent();
+	printer->Print(
+		"}\n\n");
 }
 
 void MessageGenerator::GenerateFreezingCode(io::Printer* printer) {
@@ -509,36 +554,21 @@ void MessageGenerator::GenerateFrameworkMethods(io::Printer* printer) {
     printer->Outdent();
     printer->Print("}\n\n");
 
-    WriteGeneratedCodeAttributes(printer);
-    printer->Print(
-        "public override string ToString() {\n"
-        "  return pb::JsonFormatter.ToDiagnosticString(this);\n"
-        "}\n\n");
+    //WriteGeneratedCodeAttributes(printer);
+    //printer->Print(
+    //    "public override string ToString() {\n"
+    //    "  return pb::JsonFormatter.ToDiagnosticString(this);\n"
+    //    "}\n\n");
 }
 
 void MessageGenerator::GenerateMessageSerializationMethods(io::Printer* printer) {
   WriteGeneratedCodeAttributes(printer);
   printer->Print(
       "public void WriteTo(pb::CodedOutputStream output) {\n");
-  printer->Print("#if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE\n");
-  printer->Indent();
-  printer->Print("output.WriteRawMessage(this);\n");
-  printer->Outdent();
-  printer->Print("#else\n");
   printer->Indent();
   GenerateWriteToBody(printer, false);
   printer->Outdent();
-  printer->Print("#endif\n");
   printer->Print("}\n\n");
-
-  printer->Print("#if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE\n");
-  WriteGeneratedCodeAttributes(printer);
-  printer->Print("void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {\n");
-  printer->Indent();
-  GenerateWriteToBody(printer, true);
-  printer->Outdent();
-  printer->Print("}\n");
-  printer->Print("#endif\n\n");
 
   WriteGeneratedCodeAttributes(printer);
   printer->Print(
@@ -608,11 +638,15 @@ void MessageGenerator::GenerateMergingMethods(io::Printer* printer) {
   std::map<string, string> vars;
   vars["class_name"] = class_name();
 
+  //== 精简数值导出代码 Modify by laibing.sun
   WriteGeneratedCodeAttributes(printer);
   printer->Print(
     vars,
-    "public void MergeFrom($class_name$ other) {\n");
+    "public void MergeFrom(object o) {\n");
   printer->Indent();
+  printer->Print(
+	  vars,
+	  "$class_name$ other = o as $class_name$;\n");
   printer->Print(
     "if (other == null) {\n"
     "  return;\n"
@@ -662,25 +696,10 @@ void MessageGenerator::GenerateMergingMethods(io::Printer* printer) {
 
   WriteGeneratedCodeAttributes(printer);
   printer->Print("public void MergeFrom(pb::CodedInputStream input) {\n");
-  printer->Print("#if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE\n");
-  printer->Indent();
-  printer->Print("input.ReadRawMessage(this);\n");
-  printer->Outdent();
-  printer->Print("#else\n");
   printer->Indent();
   GenerateMainParseLoop(printer, false);
   printer->Outdent();
-  printer->Print("#endif\n");
   printer->Print("}\n\n");
-
-  printer->Print("#if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE\n");
-  WriteGeneratedCodeAttributes(printer);
-  printer->Print("void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {\n");
-  printer->Indent();
-  GenerateMainParseLoop(printer, true);
-  printer->Outdent();
-  printer->Print("}\n"); // method
-  printer->Print("#endif\n\n");
 
 }
 

@@ -67,6 +67,7 @@ void EnumGenerator::Generate(io::Printer* printer) {
       WriteEnumValueDocComment(printer, descriptor_->value(i));
       string original_name = descriptor_->value(i)->name();
       string name = GetEnumValueName(descriptor_->name(), descriptor_->value(i)->name());
+	  //string name = descriptor_->value(i)->name();
       // Make sure we don't get any duplicate names due to prefix removal.
       while (!used_names.insert(name).second) {
         // It's possible we'll end up giving this warning multiple times, but that's better than not at all.
@@ -76,12 +77,12 @@ void EnumGenerator::Generate(io::Printer* printer) {
       }
       int number = descriptor_->value(i)->number();
       if (!used_number.insert(number).second) {
-          printer->Print("[pbr::OriginalName(\"$original_name$\", PreferredAlias = false)] $name$ = $number$,\n",
+          printer->Print("$name$ = $number$,\n",
              "original_name", original_name,
              "name", name,
              "number", StrCat(number));
       } else {
-          printer->Print("[pbr::OriginalName(\"$original_name$\")] $name$ = $number$,\n",
+          printer->Print("$name$ = $number$,\n",
              "original_name", original_name,
              "name", name,
              "number", StrCat(number));

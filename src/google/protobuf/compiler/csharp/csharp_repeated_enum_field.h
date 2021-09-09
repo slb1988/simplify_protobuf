@@ -55,6 +55,7 @@ class RepeatedEnumFieldGenerator : public FieldGeneratorBase {
       delete;
 
   virtual void GenerateCloningCode(io::Printer* printer);
+  virtual void GenerateResetCode(io::Printer* printer);
   virtual void GenerateFreezingCode(io::Printer* printer);
   virtual void GenerateMembers(io::Printer* printer);
   virtual void GenerateMergingCode(io::Printer* printer);

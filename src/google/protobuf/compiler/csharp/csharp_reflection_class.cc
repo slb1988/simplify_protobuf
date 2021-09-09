@@ -65,11 +65,11 @@ ReflectionClassGenerator::~ReflectionClassGenerator() {
 
 void ReflectionClassGenerator::Generate(io::Printer* printer) {
   WriteIntroduction(printer);
-
-  WriteDescriptor(printer);
+  //== 精简数值导出代码 Modify by laibing.sun
+  //WriteDescriptor(printer);
   // Close the class declaration.
-  printer->Outdent();
-  printer->Print("}\n");
+  //printer->Outdent();
+  //printer->Print("}\n");
 
   if (file_->extension_count() > 0) {
     printer->Print(
@@ -133,7 +133,6 @@ void ReflectionClassGenerator::WriteIntroduction(io::Printer* printer) {
     "\n"
     "using pb = global::Google.Protobuf;\n"
     "using pbc = global::Google.Protobuf.Collections;\n"
-    "using pbr = global::Google.Protobuf.Reflection;\n"
     "using scg = global::System.Collections.Generic;\n",
     "file_name", file_->name());
 
@@ -142,15 +141,15 @@ void ReflectionClassGenerator::WriteIntroduction(io::Printer* printer) {
     printer->Indent();
     printer->Print("\n");
   }
-
-  printer->Print(
-    "/// <summary>Holder for reflection information generated from $file_name$</summary>\n"
-    "$access_level$ static partial class $reflection_class_name$ {\n"
-    "\n",
-    "file_name", file_->name(),
-    "access_level", class_access_level(),
-    "reflection_class_name", reflectionClassname_);
-  printer->Indent();
+  //== 精简数值导出代码 Modify by laibing.sun
+  //printer->Print(
+  //  "/// <summary>Holder for reflection information generated from $file_name$</summary>\n"
+  //  "$access_level$ static partial class $reflection_class_name$ {\n"
+  //  "\n",
+  //  "file_name", file_->name(),
+  //  "access_level", class_access_level(),
+  //  "reflection_class_name", reflectionClassname_);
+  //printer->Indent();
 }
 
 void ReflectionClassGenerator::WriteDescriptor(io::Printer* printer) {

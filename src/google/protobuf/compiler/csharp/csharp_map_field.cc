@@ -143,6 +143,11 @@ void MapFieldGenerator::GenerateCloningCode(io::Printer* printer) {
     "$name$_ = other.$name$_.Clone();\n");
 }
 
+void MapFieldGenerator::GenerateResetCode(io::Printer* printer) {
+	printer->Print(variables_,
+		"if ($name$_ != null)\n  $name$_.Clear();\n");
+}
+
 void MapFieldGenerator::GenerateFreezingCode(io::Printer* printer) {
 }
 

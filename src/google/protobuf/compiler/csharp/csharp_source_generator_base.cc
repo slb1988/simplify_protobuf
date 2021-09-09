@@ -55,7 +55,8 @@ SourceGeneratorBase::~SourceGeneratorBase() {
 }
 
 void SourceGeneratorBase::WriteGeneratedCodeAttributes(io::Printer* printer) {
-  printer->Print("[global::System.Diagnostics.DebuggerNonUserCodeAttribute]\n");
+  //== 精简数值导出代码 Modify by laibing.sun
+  //printer->Print("[global::System.Diagnostics.DebuggerNonUserCodeAttribute]\n");
 }
 
 std::string SourceGeneratorBase::class_access_level() {

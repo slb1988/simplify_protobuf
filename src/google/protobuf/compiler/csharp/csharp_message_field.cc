@@ -189,6 +189,11 @@ void MessageFieldGenerator::GenerateCloningCode(io::Printer* printer) {
     "$name$_ = other.$has_property_check$ ? other.$name$_.Clone() : null;\n");
 }
 
+void MessageFieldGenerator::GenerateResetCode(io::Printer* printer) {
+	printer->Print(variables_,
+		"if ($property_name$ != null)\n  $property_name$.Reset();\n");
+}
+
 void MessageFieldGenerator::GenerateFreezingCode(io::Printer* printer) {
 }
 

@@ -146,6 +146,11 @@ void RepeatedMessageFieldGenerator::GenerateCloningCode(io::Printer* printer) {
     "$name$_ = other.$name$_.Clone();\n");
 }
 
+void RepeatedMessageFieldGenerator::GenerateResetCode(io::Printer* printer) {
+	printer->Print(variables_,
+		"if ($name$_ != null)\n  $name$_.Clear();\n");
+}
+
 void RepeatedMessageFieldGenerator::GenerateFreezingCode(io::Printer* printer) {
 }
 
