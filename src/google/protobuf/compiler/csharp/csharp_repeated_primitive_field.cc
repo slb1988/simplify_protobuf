@@ -132,6 +132,11 @@ void RepeatedPrimitiveFieldGenerator::GenerateResetCode(io::Printer* printer) {
 		"if ($name$_  != null)\n  $name$_.Clear();\n");
 }
 
+void RepeatedPrimitiveFieldGenerator::GenerateClearCode(io::Printer* printer) {
+    printer->Print(variables_,
+        "if ($name$_  != null)\n  $name$_.Clear();\n");
+}
+
 void RepeatedPrimitiveFieldGenerator::GenerateFreezingCode(io::Printer* printer) {
 }
 

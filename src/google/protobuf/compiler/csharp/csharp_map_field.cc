@@ -148,6 +148,11 @@ void MapFieldGenerator::GenerateResetCode(io::Printer* printer) {
 		"if ($name$_ != null)\n  $name$_.Clear();\n");
 }
 
+void MapFieldGenerator::GenerateClearCode(io::Printer* printer) {
+    printer->Print(variables_,
+        "if ($name$_ != null)\n  $name$_.Clear();\n");
+}
+
 void MapFieldGenerator::GenerateFreezingCode(io::Printer* printer) {
 }
 

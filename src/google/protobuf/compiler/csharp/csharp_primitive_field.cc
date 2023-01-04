@@ -256,6 +256,9 @@ void PrimitiveFieldGenerator::GenerateResetCode(io::Printer* printer) {
 		"$name$_ = $default_value$;\n");
 }
 
+void PrimitiveFieldGenerator::GenerateClearCode(io::Printer* printer) {
+}
+
 void PrimitiveFieldGenerator::GenerateCodecCode(io::Printer* printer) {
   printer->Print(
     variables_,
@@ -351,6 +354,9 @@ void PrimitiveOneofFieldGenerator::GenerateCloningCode(io::Printer* printer) {
 void PrimitiveOneofFieldGenerator::GenerateResetCode(io::Printer* printer) {
 	printer->Print(variables_,
 		"$property_name$ = $default_value$;\n");
+}
+
+void PrimitiveOneofFieldGenerator::GenerateClearCode(io::Printer* printer) {
 }
 
 }  // namespace csharp

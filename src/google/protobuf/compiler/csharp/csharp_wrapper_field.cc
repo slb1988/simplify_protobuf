@@ -189,6 +189,10 @@ void WrapperFieldGenerator::GenerateCloningCode(io::Printer* printer) {
 void WrapperFieldGenerator::GenerateResetCode(io::Printer* printer) {
 	printer->Print(variables_, "$property_name$ = $default_value$;\n");
 }
+
+void WrapperFieldGenerator::GenerateClearCode(io::Printer* printer) {
+}
+
 void WrapperFieldGenerator::GenerateCodecCode(io::Printer* printer) {
   if (is_value_type) {
     printer->Print(

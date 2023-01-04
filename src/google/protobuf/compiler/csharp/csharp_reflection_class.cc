@@ -71,7 +71,7 @@ void ReflectionClassGenerator::Generate(io::Printer* printer) {
   //printer->Outdent();
   //printer->Print("}\n");
 
-  if (file_->extension_count() > 0) {
+  /*if (file_->extension_count() > 0) {
     printer->Print(
         "/// <summary>Holder for extension identifiers generated from the top "
         "level of $file_name$</summary>\n"
@@ -88,7 +88,7 @@ void ReflectionClassGenerator::Generate(io::Printer* printer) {
     printer->Print(
     "}\n"
     "\n");
-  }
+  }*/
 
   // write children: Enums
   if (file_->enum_type_count() > 0) {

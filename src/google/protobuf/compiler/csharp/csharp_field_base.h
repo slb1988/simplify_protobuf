@@ -56,6 +56,7 @@ class FieldGeneratorBase : public SourceGeneratorBase {
 
   virtual void GenerateCloningCode(io::Printer* printer) = 0;
   virtual void GenerateResetCode(io::Printer* printer) = 0;
+  virtual void GenerateClearCode(io::Printer* printer) = 0;
   virtual void GenerateFreezingCode(io::Printer* printer);
   virtual void GenerateCodecCode(io::Printer* printer);
   virtual void GenerateExtensionCode(io::Printer* printer);

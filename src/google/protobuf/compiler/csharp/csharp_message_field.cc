@@ -99,22 +99,24 @@ void MessageFieldGenerator::GenerateMembers(io::Printer* printer) {
   }
 }
 
+//public void MergeFrom(object o)
 void MessageFieldGenerator::GenerateMergingCode(io::Printer* printer) {
   printer->Print(
     variables_,
     "if (other.$has_property_check$) {\n"
     "  if ($has_not_property_check$) {\n"
-    "    $property_name$ = new $type_name$();\n"
+    "    $property_name$ = Mogo.ObjectPoolThreadSafe<$type_name$>.Allocate();\n"
     "  }\n"
     "  $property_name$.MergeFrom(other.$property_name$);\n"
     "}\n");
 }
 
+//MergeFrom(pb::CodedInputStream input)
 void MessageFieldGenerator::GenerateParsingCode(io::Printer* printer) {
   printer->Print(
     variables_,
     "if ($has_not_property_check$) {\n"
-    "  $property_name$ = new $type_name$();\n"
+    "  $property_name$ = Mogo.ObjectPoolThreadSafe<$type_name$>.Allocate();\n"
     "}\n");
   if (descriptor_->type() == FieldDescriptor::Type::TYPE_MESSAGE) {
     printer->Print(variables_, "input.ReadMessage($property_name$);\n");
@@ -186,12 +188,19 @@ void MessageFieldGenerator::GenerateExtensionCode(io::Printer* printer) {
 }
 void MessageFieldGenerator::GenerateCloningCode(io::Printer* printer) {
   printer->Print(variables_,
-    "$name$_ = other.$has_property_check$ ? other.$name$_.Clone() : null;\n");
+    "$name$_ = other.$has_property_check$ ? ($type_name$)other.$name$_.Clone() : null;\n");
 }
 
 void MessageFieldGenerator::GenerateResetCode(io::Printer* printer) {
 	printer->Print(variables_,
 		"if ($property_name$ != null)\n  $property_name$.Reset();\n");
+}
+
+void MessageFieldGenerator::GenerateClearCode(io::Printer* printer) {
+    printer->Print(variables_,
+        "if ($property_name$ != null){\n  $property_name$.Clear();\n  $property_name$ = null;\n}\n");
+    //printer->Print(variables_,
+    //    "    Mogo.ObjectPoolThreadSafe<$type_name$>.Deallocate($name$_);\n}\n");
 }
 
 void MessageFieldGenerator::GenerateFreezingCode(io::Printer* printer) {
@@ -260,7 +269,7 @@ void MessageOneofFieldGenerator::GenerateMembers(io::Printer* printer) {
 void MessageOneofFieldGenerator::GenerateMergingCode(io::Printer* printer) {
   printer->Print(variables_,
     "if ($property_name$ == null) {\n"
-    "  $property_name$ = new $type_name$();\n"
+    "  $property_name$ = Mogo.ObjectPoolThreadSafe<$type_name$>.Allocate();\n"
     "}\n"
     "$property_name$.MergeFrom(other.$property_name$);\n");
 }

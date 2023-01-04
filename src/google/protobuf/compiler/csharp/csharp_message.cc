@@ -133,10 +133,11 @@ void MessageGenerator::Generate(io::Printer* printer) {
   printer->Print("{\n");
   printer->Indent();
 
+  //() => new $class_name$()
   // All static fields and properties
   printer->Print(
       vars,
-      "private static readonly pb::MessageParser<$class_name$> _parser = new pb::MessageParser<$class_name$>(() => new $class_name$());\n");
+      "private static readonly pb::MessageParser<$class_name$> _parser = new pb::MessageParser<$class_name$>();\n");
 
   printer->Print(
       "private pb::UnknownFieldSet _unknownFields;\n");
@@ -192,17 +193,21 @@ void MessageGenerator::Generate(io::Printer* printer) {
   //  "\n");
 
   // Parameterless constructor and partial OnConstruction method.
-  //WriteGeneratedCodeAttributes(printer);
-  //printer->Print(
-  //  vars,
-  //  "public $class_name$() {\n"
-  //  "  OnConstruction();\n"
-  //  "}\n\n"
-  //  "partial void OnConstruction();\n\n");
+  // remove OnConstruction()
+  WriteGeneratedCodeAttributes(printer);
+  printer->Print(
+    vars,
+    "public $class_name$() {\n"
+    //"  OnConstruction();\n"
+    "}\n\n"
+  //  "partial void OnConstruction();\n\n"
+  );
 
-  //GenerateCloningCode(printer);
+  GenerateCloningCode(printer);
   //== add by Luckey
   GenerateResetCode(printer);
+  // 添加Clear函数，用来回收Message
+  GenerateClearCode(printer);
   GenerateFreezingCode(printer);
 
   // Fields/properties
@@ -417,8 +422,8 @@ void MessageGenerator::GenerateCloningCode(io::Printer* printer) {
     printer->Print("}\n\n");
   }
   // Clone unknown fields
-  printer->Print(
-      "_unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);\n");
+   printer->Print(
+       "_unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);\n");
   if (has_extension_ranges_) {
     printer->Print(
         "_extensions = pb::ExtensionSet.Clone(other._extensions);\n");
@@ -427,12 +432,12 @@ void MessageGenerator::GenerateCloningCode(io::Printer* printer) {
   printer->Outdent();
   printer->Print("}\n\n");
 
-  //WriteGeneratedCodeAttributes(printer);
-  //printer->Print(
-  //  vars,
-  //  "public $class_name$ Clone() {\n"
-  //  "  return new $class_name$(this);\n"
-  //  "}\n\n");
+  WriteGeneratedCodeAttributes(printer);
+  printer->Print(
+    vars,
+    "public object Clone() {\n"
+    "  return new $class_name$(this);\n"
+    "}\n\n");
 }
 
 void MessageGenerator::GenerateResetCode(io::Printer* printer) {
@@ -477,6 +482,53 @@ void MessageGenerator::GenerateResetCode(io::Printer* printer) {
 	printer->Outdent();
 	printer->Print(
 		"}\n\n");
+}
+
+void MessageGenerator::GenerateClearCode(io::Printer* printer) {
+    std::map<string, string> vars;
+    vars["class_name"] = class_name();
+    printer->Print(
+        vars,
+        "public void Clear() {\n");
+
+    printer->Indent();
+    // Clone non-oneof fields first (treating optional proto3 fields as non-oneof)
+    for (int i = 0; i < descriptor_->field_count(); i++) {
+        const FieldDescriptor* field = descriptor_->field(i);
+        if (field->real_containing_oneof()) {
+            continue;
+        }
+        std::unique_ptr<FieldGeneratorBase> generator(CreateFieldGeneratorInternal(field));
+        generator->GenerateClearCode(printer);
+    }
+    // Clone just the right field for each real oneof
+    for (int i = 0; i < descriptor_->real_oneof_decl_count(); ++i) {
+        const OneofDescriptor* oneof = descriptor_->oneof_decl(i);
+        vars["name"] = UnderscoresToCamelCase(oneof->name(), false);
+        vars["property_name"] = UnderscoresToCamelCase(oneof->name(), true);
+        printer->Print(vars, "switch (other.$property_name$Case) {\n");
+        printer->Indent();
+        for (int j = 0; j < oneof->field_count(); j++) {
+            const FieldDescriptor* field = oneof->field(j);
+            std::unique_ptr<FieldGeneratorBase> generator(CreateFieldGeneratorInternal(field));
+            vars["field_property_name"] = GetPropertyName(field);
+            printer->Print(
+                vars,
+                "case $property_name$OneofCase.$field_property_name$:\n");
+            printer->Indent();
+            generator->GenerateClearCode(printer);
+            printer->Print("break;\n");
+            printer->Outdent();
+        }
+        printer->Outdent();
+        printer->Print("}\n\n");
+    }
+    printer->Print("Mogo.ObjectPoolThreadSafe<");
+    printer->Print(class_name().c_str());
+    printer->Print(">.Deallocate(this);\n");
+    printer->Outdent();
+    printer->Print(
+        "}\n\n");
 }
 
 void MessageGenerator::GenerateFreezingCode(io::Printer* printer) {
@@ -722,14 +774,14 @@ void MessageGenerator::GenerateMainParseLoop(io::Printer* printer, bool use_pars
   if (has_extension_ranges_) {
     printer->Print(vars,
       "default:\n"
-      "  if (!pb::ExtensionSet.TryMergeFieldFrom(ref _extensions, $maybe_ref_input$)) {\n"
-      "    _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, $maybe_ref_input$);\n"
-      "  }\n"
+       "  if (!pb::ExtensionSet.TryMergeFieldFrom(ref _extensions, $maybe_ref_input$)) {\n"
+       "    _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, $maybe_ref_input$);\n"
+       "  }\n"
       "  break;\n");
   } else {
     printer->Print(vars,
       "default:\n"
-      "  _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, $maybe_ref_input$);\n"
+       "  _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, $maybe_ref_input$);\n"
       "  break;\n");
   }
   for (int i = 0; i < fields_by_number().size(); i++) {
