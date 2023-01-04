@@ -135,9 +135,9 @@ void MessageGenerator::Generate(io::Printer* printer) {
 
   //() => new $class_name$()
   // All static fields and properties
-  printer->Print(
-      vars,
-      "private static readonly pb::MessageParser<$class_name$> _parser = new pb::MessageParser<$class_name$>();\n");
+  //printer->Print(
+  //    vars,
+  //    "private static readonly pb::MessageParser<$class_name$> _parser = new pb::MessageParser<$class_name$>();\n");
 
   printer->Print(
       "private pb::UnknownFieldSet _unknownFields;\n");
@@ -164,9 +164,9 @@ void MessageGenerator::Generate(io::Printer* printer) {
 
   WriteGeneratedCodeAttributes(printer);
 
-  printer->Print(
-      vars,
-      "public static pb::MessageParser<$class_name$> Parser { get { return _parser; } }\n\n");
+  //printer->Print(
+  //    vars,
+  //    "public static pb::MessageParser<$class_name$> Parser { get { return _parser; } }\n\n");
 
   // Access the message descriptor via the relevant file descriptor or containing message descriptor.
   //if (!descriptor_->containing_type()) {

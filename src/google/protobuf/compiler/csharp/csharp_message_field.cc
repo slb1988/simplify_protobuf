@@ -210,11 +210,15 @@ void MessageFieldGenerator::GenerateCodecCode(io::Printer* printer) {
   if (descriptor_->type() == FieldDescriptor::Type::TYPE_MESSAGE) {
     printer->Print(
       variables_,
-      "pb::FieldCodec.ForMessage($tag$, $type_name$.Parser)");
+      //"pb::FieldCodec.ForMessage($tag$, $type_name$.Parser)"
+        "pb::FieldCodec.ForMessage<$type_name$>($tag$)"
+    );
   } else {
     printer->Print(
       variables_,
-      "pb::FieldCodec.ForGroup($tag$, $end_tag$, $type_name$.Parser)");
+      //"pb::FieldCodec.ForGroup($tag$, $end_tag$, $type_name$.Parser)"
+      "pb::FieldCodec.ForGroup<$type_name$>($tag$, $end_tag$)"
+    );
   }
 }
 
