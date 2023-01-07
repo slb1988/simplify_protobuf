@@ -105,9 +105,12 @@ void MessageFieldGenerator::GenerateMergingCode(io::Printer* printer) {
     variables_,
     "if (other.$has_property_check$) {\n"
     "  if ($has_not_property_check$) {\n"
-    "    $property_name$ = Mogo.ObjectPoolThreadSafe<$type_name$>.Allocate();\n"
+    "    if (usePool)\n"
+    "      $property_name$ = Mogo.ObjectPoolThreadSafe<$type_name$>.Allocate();\n"
+    "    else\n"
+    "      $property_name$ = new $type_name$();\n"
     "  }\n"
-    "  $property_name$.MergeFrom(other.$property_name$);\n"
+    "  $property_name$.MergeFrom(other.$property_name$, usePool);\n"
     "}\n");
 }
 
@@ -116,7 +119,7 @@ void MessageFieldGenerator::GenerateParsingCode(io::Printer* printer) {
   printer->Print(
     variables_,
     "if ($has_not_property_check$) {\n"
-    "  $property_name$ = Mogo.ObjectPoolThreadSafe<$type_name$>.Allocate();\n"
+    "    $property_name$ = Mogo.ObjectPoolThreadSafe<$type_name$>.Allocate();\n"
     "}\n");
   if (descriptor_->type() == FieldDescriptor::Type::TYPE_MESSAGE) {
     printer->Print(variables_, "input.ReadMessage($property_name$);\n");
@@ -284,7 +287,7 @@ void MessageOneofFieldGenerator::GenerateParsingCode(io::Printer* printer) {
     variables_,
     "$type_name$ subBuilder = new $type_name$();\n"
     "if ($has_property_check$) {\n"
-    "  subBuilder.MergeFrom($property_name$);\n"
+    "  subBuilder.MergeFrom($property_name$, usePool);\n"
     "}\n");
   if (descriptor_->type() == FieldDescriptor::Type::TYPE_MESSAGE) {
     printer->Print("input.ReadMessage(subBuilder);\n");

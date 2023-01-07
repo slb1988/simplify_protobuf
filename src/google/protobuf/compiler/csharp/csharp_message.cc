@@ -694,7 +694,7 @@ void MessageGenerator::GenerateMergingMethods(io::Printer* printer) {
   WriteGeneratedCodeAttributes(printer);
   printer->Print(
     vars,
-    "public void MergeFrom(object o) {\n");
+    "public void MergeFrom(object o, bool usePool) {\n");
   printer->Indent();
   printer->Print(
 	  vars,
