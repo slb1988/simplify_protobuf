@@ -1,0 +1,94 @@
+using System.Collections.Generic;
+using System;
+using Google.Protobuf;
+
+/*  
+ *  Generate By NetworkProtoImporter
+ *  Maintain By laibing.sun
+ */
+
+namespace Pb
+{
+	public enum MessageType
+	{
+[[MessageType]]
+	}
+	// 在Editor运行时是稳定的，内容一旦变化会被重新编译Reload，故而可以用static
+	public class CommandMap
+	{
+		private Dictionary<ushort, Type> _cmdIDMap;
+		private Dictionary<Type, ushort> _typeMap;
+
+		public CommandMap()
+		{
+			_cmdIDMap = MakeCmdIDMap();
+			_typeMap = GetReverseMap(_cmdIDMap);
+		}
+
+		private static CommandMap _instance;
+		public static CommandMap GetInstance()
+		{
+			if (_instance == null)
+			{
+				_instance = new CommandMap();
+			}
+			return _instance;
+		}
+
+		private Dictionary<Type, ushort> GetReverseMap(Dictionary<ushort, Type> orgMap)
+		{
+			Dictionary<Type, ushort> reverseMap = new Dictionary<Type, ushort>();
+			foreach (KeyValuePair<ushort, Type> kvp in orgMap)
+			{
+				reverseMap.Add(kvp.Value, kvp.Key);
+			}
+			return reverseMap;
+		}
+
+		private Dictionary<ushort, Type> MakeCmdIDMap()
+		{
+			Dictionary<ushort, Type> cmdMap = new Dictionary<ushort, Type>();
+			
+[[MapContent]]
+			return cmdMap;
+		}
+		
+		public IMessage GetMessageFromPool(ushort cmdID, bool usePool)
+		{
+			var type = GetTypeByCmdID(cmdID);
+			if (type == null)
+				return null;
+
+			return GetMessageFromPool(type, usePool);
+		}
+
+        public IMessage GetMessageFromPool(Type type, bool usePool)
+        {
+[[GetDataContent]]
+            Log.E("unsupport type ", type);
+            return null;
+        }
+
+		public ushort GetCmdIDByType(Type type)
+		{
+			ushort resCmdID;
+			if (!_typeMap.TryGetValue(type, out resCmdID))
+			{
+				Log.W(SLogCategory.Network, "undefined type=" + type);
+			}
+
+			return resCmdID;
+		}
+
+		public Type GetTypeByCmdID(ushort cmdID)
+		{
+			Type resType;
+			if (!_cmdIDMap.TryGetValue(cmdID, out resType))
+			{
+				Log.W(SLogCategory.Network, "undefined cmdID=" + cmdID);
+			}
+
+			return resType;
+		}
+	}
+}

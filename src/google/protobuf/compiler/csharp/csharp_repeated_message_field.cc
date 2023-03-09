@@ -89,7 +89,7 @@ void RepeatedMessageFieldGenerator::GenerateMembers(io::Printer* printer) {
 void RepeatedMessageFieldGenerator::GenerateMergingCode(io::Printer* printer) {
   printer->Print(
     variables_,
-    "$name$_.Add(other.$name$_);\n");
+    "$name$_.Add(other.$name$_, usePool);\n");
 }
 
 void RepeatedMessageFieldGenerator::GenerateParsingCode(io::Printer* printer) {
