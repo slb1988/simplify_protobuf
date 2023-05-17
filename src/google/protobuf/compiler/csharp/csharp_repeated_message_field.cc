@@ -148,12 +148,12 @@ void RepeatedMessageFieldGenerator::GenerateCloningCode(io::Printer* printer) {
 
 void RepeatedMessageFieldGenerator::GenerateResetCode(io::Printer* printer) {
 	printer->Print(variables_,
-		"if ($name$_ != null) {\n  for (int i = 0, num = $name$_.Count; i < num; i++)\n    $name$_[i].Clear();\n  $name$_.Clear();\n}\n");
+		"if ($name$_ != null) {\n  for (int i = 0, num = $name$_.Count; i < num; i++)\n    $name$_[i].Clear(true);\n  $name$_.Clear();\n}\n");
 }
 
 void RepeatedMessageFieldGenerator::GenerateClearCode(io::Printer* printer) {
     printer->Print(variables_,
-        "if ($name$_ != null) {\n  for (int i = 0, num = $name$_.Count; i < num; i++)\n    $name$_[i].Clear();\n  $name$_.Clear();\n}\n");
+        "if ($name$_ != null) {\n  for (int i = 0, num = $name$_.Count; i < num; i++)\n    $name$_[i].Clear(usePool);\n  $name$_.Clear();\n}\n");
 }
 
 void RepeatedMessageFieldGenerator::GenerateFreezingCode(io::Printer* printer) {

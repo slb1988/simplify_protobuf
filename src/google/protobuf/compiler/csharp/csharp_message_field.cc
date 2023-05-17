@@ -201,7 +201,7 @@ void MessageFieldGenerator::GenerateResetCode(io::Printer* printer) {
 
 void MessageFieldGenerator::GenerateClearCode(io::Printer* printer) {
     printer->Print(variables_,
-        "if ($property_name$ != null){\n  $property_name$.Clear();\n  $property_name$ = null;\n}\n");
+        "if ($property_name$ != null){\n  $property_name$.Clear(usePool);\n  $property_name$ = null;\n}\n");
     //printer->Print(variables_,
     //    "    Mogo.ObjectPoolThreadSafe<$type_name$>.Deallocate($name$_);\n}\n");
 }

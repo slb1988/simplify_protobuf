@@ -90,7 +90,7 @@ void MapFieldGenerator::GenerateMembers(io::Printer* printer) {
 void MapFieldGenerator::GenerateMergingCode(io::Printer* printer) {
   printer->Print(
       variables_,
-      "$name$_.Add(other.$name$_);\n");
+      "$name$_.Add(other.$name$_, usePool);\n");
 }
 
 void MapFieldGenerator::GenerateParsingCode(io::Printer* printer) {
@@ -145,12 +145,12 @@ void MapFieldGenerator::GenerateCloningCode(io::Printer* printer) {
 
 void MapFieldGenerator::GenerateResetCode(io::Printer* printer) {
 	printer->Print(variables_,
-		"if ($name$_ != null)\n  $name$_.Clear();\n");
+		"if ($name$_ != null)\n  $name$_.Clear(true);\n");
 }
 
 void MapFieldGenerator::GenerateClearCode(io::Printer* printer) {
     printer->Print(variables_,
-        "if ($name$_ != null)\n  $name$_.Clear();\n");
+        "if ($name$_ != null)\n  $name$_.Clear(usePool);\n");
 }
 
 void MapFieldGenerator::GenerateFreezingCode(io::Printer* printer) {

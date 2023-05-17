@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Mogo;
 using UnityEditor;
 using UnityEditor.VersionControl;
@@ -13,6 +15,23 @@ using Asset = UnityEditor.VersionControl.Asset;
 /// </summary>
 public class NetworkProtoImporter
 {
+    static readonly HashSet<string> protoBuiltinTypes = new HashSet<string>(new string[]
+    {
+        "double",
+        "float",
+        "int32",
+        "int64",
+        "uint32",
+        "uint64",
+        "sint32",
+        "fixed32",
+        "fixed64",
+        "sfixed32",
+        "sfixed64",
+        "bool",
+        "string",
+        "bytes"
+    });
     // [MenuItem("Tools/网络/Test")]
     // static void Test()
     // {
@@ -92,12 +111,18 @@ public class NetworkProtoImporter
         StringBuilder msgTypeStrb = new StringBuilder();
         StringBuilder sb = new StringBuilder();
         StringBuilder getDataStrb = new StringBuilder();
+
+        Regex repeatFieldTypeRegex = new Regex("repeated\\s(\\w+)\\s");
+        Regex mapFieldTypeRegex = new Regex("map<(\\w+), (\\w+)>\\s");
+        
+        HashSet<string> additionRepeatFieldTypes = new HashSet<string>();
         foreach (var file in Directory.GetFiles(bashPath))
         {
             if (file.EndsWith(".proto") == false)
                 continue;
 
             var lines = File.ReadAllLines(file);
+
             for (int i = 0; i < lines.Length; i++)
             {
                 var line = lines[i];
@@ -105,11 +130,11 @@ public class NetworkProtoImporter
                 {
                     var messageName = line.Substring(8, line.LastIndexOf('{') - 8);
                     messageName = messageName.Trim();
-                    if (lines[i+1].Contains("option (msg_id)") == false)
+                    if (lines[i + 1].Contains("option (msg_id)") == false)
                         continue;
 
                     var startIdx2 = "  option (msg_id) =".Length;
-                    var idStr = lines[i + 1].Substring(startIdx2, lines[i+1].LastIndexOf(';')-startIdx2);
+                    var idStr = lines[i + 1].Substring(startIdx2, lines[i + 1].LastIndexOf(';') - startIdx2);
                     idStr = idStr.Trim();
 
                     sb.Append($"			cmdMap.Add((int)Pb.MessageType.{messageName}, typeof({messageName}));\r\n");
@@ -117,29 +142,40 @@ public class NetworkProtoImporter
 
                     getDataStrb.Append(
                         $"\t\t\tif (type == typeof(Pb.{messageName})) \n\t\t\t\treturn usePool ? Mogo.ObjectPoolThreadSafe<Pb.{messageName}>.Allocate() : new Pb.{messageName}();\n");
-                    
+
                     i++;
+                }
+
+                var m = repeatFieldTypeRegex.Match(line);
+                if (m.Success)
+                {
+                    var typeName = m.Groups[1].Value;
+                    if (!protoBuiltinTypes.Contains(typeName))
+                        additionRepeatFieldTypes.Add(typeName);
+                }
+
+                var mc = mapFieldTypeRegex.Matches(line);
+                foreach (Match _m in mc)
+                {
+                    if (_m.Success)
+                    {
+                        var keyTypeName = _m.Groups[1].Value;
+                        var valTypeName = _m.Groups[2].Value;
+                        if (!protoBuiltinTypes.Contains(keyTypeName))
+                            additionRepeatFieldTypes.Add(keyTypeName);
+                        if (!protoBuiltinTypes.Contains(valTypeName))
+                            additionRepeatFieldTypes.Add(valTypeName);
+                    }
                 }
             }
         }
 
-        var additionRepeatFieldTypes = new string[]
+        var typeList = additionRepeatFieldTypes.ToList();
+        typeList.Sort();
+        foreach (var messageName in typeList)
         {
-            "ClientComponent",
-            "PlayerEvent",
-            "WorldEvent",
-            "PlayerEventInfo",
-            "RewardData",
-            "ChatMsg",
-            "PlayerSnsInfo",
-            "TaskConditionData",
-        };
-        foreach (var messageName in additionRepeatFieldTypes)
-        {
-            
             getDataStrb.Append(
                 $"\t\t\tif (type == typeof(Pb.{messageName})) \n\t\t\t\treturn usePool ? Mogo.ObjectPoolThreadSafe<Pb.{messageName}>.Allocate() : new Pb.{messageName}();\n");
-
         }
 
         var content = File.ReadAllText("Assets/Editor/ProtoGen/CommandMap.template");

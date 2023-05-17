@@ -448,6 +448,7 @@ void MessageGenerator::GenerateResetCode(io::Printer* printer) {
 		"public void Reset() {\n");
 
 	printer->Indent();
+    printer->Print("_unknownFields = null;\n");
 	// Clone non-oneof fields first (treating optional proto3 fields as non-oneof)
 	for (int i = 0; i < descriptor_->field_count(); i++) {
 		const FieldDescriptor* field = descriptor_->field(i);
@@ -489,9 +490,10 @@ void MessageGenerator::GenerateClearCode(io::Printer* printer) {
     vars["class_name"] = class_name();
     printer->Print(
         vars,
-        "public void Clear() {\n");
+        "public void Clear(bool usePool = true) {\n");
 
     printer->Indent();
+    printer->Print("_unknownFields = null;\n");
     // Clone non-oneof fields first (treating optional proto3 fields as non-oneof)
     for (int i = 0; i < descriptor_->field_count(); i++) {
         const FieldDescriptor* field = descriptor_->field(i);
@@ -523,9 +525,13 @@ void MessageGenerator::GenerateClearCode(io::Printer* printer) {
         printer->Outdent();
         printer->Print("}\n\n");
     }
+    printer->Print("if (usePool) {\n");
+    printer->Indent();
     printer->Print("Mogo.ObjectPoolThreadSafe<");
     printer->Print(class_name().c_str());
     printer->Print(">.Deallocate(this);\n");
+    printer->Outdent();
+    printer->Print("}\n");
     printer->Outdent();
     printer->Print(
         "}\n\n");
